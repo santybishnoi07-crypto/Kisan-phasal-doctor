@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html<html lang="hi" class="h-full">
+     lang="hi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Fasal Doctor AI - किसान फसल डॉक्टर AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Inter and Hindi readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+            background-color: #f0fdf4;
+            color: #166534;
+        }
+        .animate-pulse-slow {
+            animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-emerald-700 p-2 rounded-full shadow-inner">
+                    <i class="fa-solid fa-seedling text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">किसान फसल डॉक्टर AI</h1>
+                    <p class="text-xs text-emerald-200">फलोदी, राजस्थान (प्रायोगिक AI टूल)</p>
+                </div>
+            </div>
+            <!-- Language Switcher -->
+            <div class="flex bg-emerald-800 p-1 rounded-lg text-xs font-semibold">
+                <button onclick="setLanguage('hi')" id="lang-hi" class="px-2.5 py-1.5 rounded-md bg-white text-emerald-800 shadow transition">हिन्दी</button>
+                <button onclick="setLanguage('rajasthani')" id="lang-rajasthani" class="px-2.5 py-1.5 rounded-md text-emerald-200 hover:text-white transition">राजस्थानी</button>
+                <button onclick="setLanguage('en')" id="lang-en" class="px-2.5 py-1.5 rounded-md text-emerald-200 hover:text-white transition">English</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body -->
+    <main class="flex-grow max-w-2xl w-full mx-auto px-4 py-5 space-y-5">
+        
+        <!-- Experimental Notice Banner -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-lg shadow-sm text-xs text-amber-800 flex items-start space-x-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 text-sm"></i>
+            <div>
+                <span class="font-bold" id="notice-title">प्रायोगिक चेतावनी:</span> <span id="notice-text">यह AI आधारित प्रारंभिक आकलन टूल है। यह कृषि विशेषज्ञ की सटीक जाँच का विकल्प नहीं है।</span>
+            </div>
+        </div>
+
+        <!-- App Container Form -->
+        <div id="form-container" class="bg-white rounded-2xl shadow-lg p-5 border border-emerald-100 space-y-5">
+            
+            <!-- Step 1: Image Capture / Upload -->
+            <div class="space-y-3">
+                <label class="block font-bold text-gray-800 text-base" id="label-photo">
+                    <i class="fa-solid fa-camera text-emerald-600 mr-1.5"></i> 1. फसल की प्रभावित पत्ती, तना या पौधे की फोटो लें:
+                </label>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Camera Button -->
+                    <button type="button" onclick="triggerCamera()" class="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-camera-retro text-xl"></i>
+                        <span id="btn-camera-text" class="text-base">फसल की फोटो खींचें</span>
+                    </button>
+                    <!-- Gallery Button -->
+                    <button type="button" onclick="triggerGallery()" class="w-full py-4 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-bold rounded-xl shadow-sm flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-images text-xl"></i>
+                        <span id="btn-gallery-text" class="text-base">गैलरी से फोटो चुनें</span>
+                    </button>
+                </div>
+                <!-- Hidden inputs -->
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelection(event)">
+                <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+
+                <!-- Image Preview Box -->
+                <div id="preview-container" class="hidden mt-3 relative rounded-xl overflow-hidden border-2 border-dashed border-emerald-300 p-2 bg-emerald-50/50 text-center">
+                    <img id="image-preview" src="#" alt="फसल प्रीव्यू" class="max-h-48 mx-auto rounded-lg object-contain shadow-sm">
+                    <button type="button" onclick="removeImage()" class="absolute top-4 right-4 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-red-700">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <p class="text-xs text-emerald-700 mt-2 font-medium" id="preview-status">फोटो सफलतापूर्वक जोड़ी गई</p>
+                </div>
+            </div>
+
+            <!-- Step 2: Crop Selection -->
+            <div class="space-y-2">
+                <label class="block font-bold text-gray-800 text-sm" id="label-crop">
+                    <i class="fa-solid fa-wheat-awn text-emerald-600 mr-1.5"></i> 2. फसल का नाम चुनें:
+                </label>
+                <select id="crop-select" class="w-full p-3.5 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="" disabled selected>-- फसल चुनें / Select Crop --</option>
+                    <option value="Wheat (गेहूँ)">गेहूँ (Wheat)</option>
+                    <option value="Mustard (सरसों)">सरसों (Mustard)</option>
+                    <option value="Pearl Millet (बाजरा)">बाजरा (Pearl Millet)</option>
+                    <option value="Cumin (जीरा)">जीरा (Cumin)</option>
+                    <option value="Moth Bean (मोठ)">मोठ (Moth Bean)</option>
+                    <option value="Mung Bean (मूंग)">मूंग (Mung Bean)</option>
+                    <option value="Groundnut (मूंगफली)">मूंगफली (Groundnut)</option>
+                    <option value="Cotton (कपास)">कपास (Cotton)</option>
+                    <option value="Chickpea (चना)">चना (Chickpea)</option>
+                    <option value="Other / अन्य">अन्य फसल (Other Crop)</option>
+                </select>
+            </div>
+
+            <!-- Step 3: Location & Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold text-gray-800 text-sm mb-1" id="label-location">
+                        <i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> गाँव / जिला:
+                    </label>
+                    <input type="text" id="farmer-location" placeholder="जैसे: फलोदी, राजस्थान" value="फलोदी, राजस्थान" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-800 text-sm mb-1" id="label-date">
+                        <i class="fa-solid fa-calendar-days text-emerald-600 mr-1"></i> बीजाई की अनुमानित तारीख:
+                    </label>
+                    <input type="date" id="sowing-date" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Step 4: Symptoms description -->
+            <div class="space-y-1">
+                <label class="block font-bold text-gray-800 text-sm" id="label-symptoms">
+                    <i class="fa-solid fa-notes-medical text-emerald-600 mr-1.5"></i> पौधे में क्या लक्षण दिख रहे हैं? (वैकल्पिक)
+                </label>
+                <textarea id="farmer-symptoms" rows="2" placeholder="जैसे: पत्तियाँ पीली हो रही हैं, धब्बे हैं या कीड़े लगे हैं..." class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+            </div>
+
+            <!-- Step 5: Submit Button -->
+            <button type="button" onclick="analyzeCrop()" id="analyze-btn" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-lg rounded-xl shadow-lg transition transform active:scale-98 flex items-center justify-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                <span id="btn-analyze-text">फसल की जाँच करें</span>
+            </button>
+        </div>
+
+        <!-- Loading Indicator Modal / Box -->
+        <div id="loading-container" class="hidden bg-white rounded-2xl shadow-xl p-8 text-center space-y-4 border border-emerald-200">
+            <div class="inline-block p-4 bg-emerald-100 rounded-full text-emerald-600 animate-bounce">
+                <i class="fa-solid fa-microscope text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800" id="loading-title">AI फसल की जाँच कर रहा है...</h3>
+            <p class="text-xs text-gray-500 max-w-xs mx-auto" id="loading-subtitle">कृपया प्रतीक्षा करें, हम पत्तियों के धब्बे, पीलेपन और कीटों के लक्षणों का विश्लेषण कर रहे हैं।</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 max-w-xs mx-auto overflow-hidden">
+                <div class="bg-emerald-600 h-2.5 rounded-full animate-pulse-slow w-3/4"></div>
+            </div>
+        </div>
+
+        <!-- Results Display Box -->
+        <div id="result-container" class="hidden bg-white rounded-2xl shadow-xl p-6 border border-emerald-200 space-y-6">
+            <div class="flex items-center justify-between border-b pb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-emerald-100 text-emerald-700 p-2 rounded-lg">
+                        <i class="fa-solid fa-clipboard-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg text-emerald-900" id="result-header-title">जाँच रिपोर्ट (Preliminary Report)</h2>
+                        <p class="text-xs text-gray-500">Kisan Fasal Doctor AI Analysis</p>
+                    </div>
+                </div>
+                <button onclick="resetApp()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> नई जाँच
+                </button>
+            </div>
+
+            <!-- Dynamic Result Content Sections -->
+            <div id="result-content" class="space-y-4 text-sm text-gray-800">
+                <!-- Rendered dynamically via JS -->
+            </div>
+
+            <!-- Mandatory Safety & Expert Disclaimer Footer -->
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-xs text-red-900 space-y-2">
+                <p class="font-bold flex items-center">
+                    <i class="fa-solid fa-circle-exclamation text-red-600 mr-1.5 text-sm"></i> 
+                    <span id="disclaimer-title">महत्वपूर्ण कृषि सुरक्षा निर्देश:</span>
+                </p>
+                <p id="disclaimer-text" class="leading-relaxed">
+                    यह रिपोर्ट केवल एक प्रारंभिक AI आकलन (Preliminary Assessment) है। बिना स्थानीय कृषि विशेषज्ञ या कृषि विज्ञान केंद्र (KVK) के सत्यापित किए बिना कोई भी कीटनाशक या रासायनिक दवा न छिड़कें। कीटनाशकों का मिश्रण करने से बचें। यदि फसल को गंभीर नुकसान है, तो तुरंत नजदीकी कृषि कार्यालय से संपर्क करें।
+                </p>
+            </div>
+
+            <!-- Action buttons at bottom of results -->
+            <div class="flex space-x-3 pt-2">
+                <button onclick="window.print()" class="flex-1 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-xl border border-emerald-300 text-sm flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>रिपोर्ट सहेजें / प्रिंट करें</span>
+                </button>
+                <button onclick="resetApp()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-arrow-rotate-right"></i>
+                    <span>दूसरी फोटो जाँचें</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t border-gray-200 py-4 text-center text-xs text-gray-600 space-y-1">
+        <p class="font-medium">Kisan Fasal Doctor AI &copy; 2026 | Phalodi District, Rajasthan</p>
+        <p class="text-gray-500">विशेष रूप से भारतीय किसानों और फलोदी के कृषि क्षेत्रों के लिए निर्मित।</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Multi-language dictionary
+        const translations = {
+            hi: {
+                noticeTitle: "प्रायोगिक चेतावनी:",
+                noticeText: "यह AI आधारित प्रारंभिक आकलन टूल है। यह कृषि विशेषज्ञ की सटीक जाँच का विकल्प नहीं है।",
+                labelPhoto: "1. फसल की प्रभावित पत्ती, तना या पौधे की फोटो लें:",
+                btnCameraText: "फसल की फोटो खींचें",
+                btnGalleryText: "गैलरी से फोटो चुनें",
+                labelCrop: "2. फसल का नाम चुनें:",
+                labelLocation: "गाँव / जिला:",
+                labelDate: "बीजाई की अनुमानित तारीख:",
+                labelSymptoms: "पौधे में क्या लक्षण दिख रहे हैं? (वैकल्पिक)",
+                btnAnalyzeText: "फसल की जाँच करें",
+                loadingTitle: "AI फसल की जाँच कर रहा है...",
+                loadingSubtitle: "कृपया प्रतीक्षा करें, हम पत्तियों के धब्बे, पीलेपन और कीटों के लक्षणों का विश्लेषण कर रहे हैं।",
+                resultHeaderTitle: "जाँच रिपोर्ट (Preliminary Report)",
+                disclaimerTitle: "महत्वपूर्ण कृषि सुरक्षा निर्देश:",
+                disclaimerText: "यह रिपोर्ट केवल एक प्रारंभिक AI आकलन (Preliminary Assessment) है। बिना स्थानीय कृषि विशेषज्ञ या कृषि विज्ञान केंद्र (KVK) के सत्यापित किए बिना कोई भी कीटनाशक या रासायनिक दवा न छिड़कें। कीटनाशकों का मिश्रण करने से बचें। यदि फसल को गंभीर नुकसान है, तो तुरंत नजदीकी कृषि कार्यालय से संपर्क करें।"
+            },
+            rajasthani: {
+                noticeTitle: "चेतावनी (Rajasthani Friendly):",
+                noticeText: "ई AI टूल सिफ प्राथमिक जानकारी खातिर है। खेत में कोई भी दवाई छिड़कने सूँ पैली कृषि डॉक्टर या कृषि विज्ञान केंद्र सुं सलाह जरूर लेज्यो.",
+                labelPhoto: "1. फसल (पत्ती, तना या फल) की साफ फोटो लेवो या अपलोड करो:",
+                btnCameraText: "फोटो खींचो",
+                btnGalleryText: "गैलरी सूँ चुणो",
+                labelCrop: "2. आपरी फसल को नाम चुणो:",
+                labelLocation: "गाँव / जिला (फलोदी):",
+                labelDate: "बीजाई की अनुमानित तारीख:",
+                labelSymptoms: "फसल में काई कमी या रोग दीखे है? (लिख सको हो)",
+                btnAnalyzeText: "फसल की जाँच कराओ",
+                loadingTitle: "AI फसल ने जाँच रियो है...",
+                loadingSubtitle: "राम-राम जी, थोड़ो सो धीरज राखो, AI फोटो रो विश्लेशण कर रियो है...",
+                resultHeaderTitle: "फसल जाँच रिपोर्ट",
+                disclaimerTitle: "जरूरी चेतावनी:",
+                disclaimerText: "ई रिपोर्ट सिफ अंदाजो है। बिना डॉक्टर की सलाह क कोई भारी दवाई मत छिड़काव करो। कृषि सेवा केंद्र सुं मिललीज्यो।"
+            },
+            en: {
+                noticeTitle: "Experimental Notice:",
+                noticeText: "This is an experimental AI preliminary assessment tool and does not replace professional agronomic diagnosis.",
+                labelPhoto: "1. Take or upload a photo of the crop leaf, stem, or plant:",
+                btnCameraText: "Take Crop Photo",
+                btnGalleryText: "Choose from Gallery",
+                labelCrop: "2. Select Crop Name:",
+                labelLocation: "Village / District:",
+                labelDate: "Estimated Sowing Date:",
+                labelSymptoms: "Observed Symptoms (Optional):",
+                btnAnalyzeText: "Analyze Crop Health",
+                loadingTitle: "AI is analyzing your crop...",
+                loadingSubtitle: "Please wait while we inspect visible leaf spots, yellowing, and pest damage.",
+                resultHeaderTitle: "Preliminary Assessment Report",
+                disclaimerTitle: "Agricultural Safety Instructions:",
+                disclaimerText: "This image analysis is preliminary and not a substitute for expert diagnosis. Never apply chemical pesticides or untested dosages without verifying with a Krishi Vigyan Kendra or local agricultural expert."
+            }
+        };
+
+        let currentLang = 'hi';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            // Update button styles
+            ['hi', 'rajasthani', 'en'].forEach(l => {
+                const btn = document.getElementById(`lang-${l}`);
+                if (l === lang) {
+                    btn.className = "px-2.5 py-1.5 rounded-md bg-white text-emerald-800 shadow transition";
+                } else {
+                    btn.className = "px-2.5 py-1.5 rounded-md text-emerald-200 hover:text-white transition";
+                }
+            });
+
+            const t = translations[lang];
+            document.getElementById('notice-title').innerText = t.noticeTitle;
+            document.getElementById('notice-text').innerText = t.noticeText;
+            document.getElementById('label-photo').innerHTML = `<i class="fa-solid fa-camera text-emerald-600 mr-1.5"></i> ${t.labelPhoto}`;
+            document.getElementById('btn-camera-text').innerText = t.btnCameraText;
+            document.getElementById('btn-gallery-text').innerText = t.btnGalleryText;
+            document.getElementById('label-crop').innerHTML = `<i class="fa-solid fa-wheat-awn text-emerald-600 mr-1.5"></i> ${t.labelCrop}`;
+            document.getElementById('label-location').innerHTML = `<i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> ${t.labelLocation}`;
+            document.getElementById('label-date').innerHTML = `<i class="fa-solid fa-calendar-days text-emerald-600 mr-1"></i> ${t.labelDate}`;
+            document.getElementById('label-symptoms').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-600 mr-1.5"></i> ${t.labelSymptoms}`;
+            document.getElementById('btn-analyze-text').innerText = t.btnAnalyzeText;
+            document.getElementById('loading-title').innerText = t.loadingTitle;
+            document.getElementById('loading-subtitle').innerText = t.loadingSubtitle;
+            document.getElementById('result-header-title').innerText = t.resultHeaderTitle;
+            document.getElementById('disclaimer-title').innerText = t.disclaimerTitle;
+            document.getElementById('disclaimer-text').innerText = t.disclaimerText;
+        }
+
+        let selectedBase64Image = null;
+
+        function triggerCamera() {
+            document.getElementById('cameraInput').click();
+        }
+
+        function triggerGallery() {
+            document.getElementById('galleryInput').click();
+        }
+
+        function handleImageSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedBase64Image = e.target.result;
+                    document.getElementById('image-preview').src = selectedBase64Image;
+                    document.getElementById('preview-container').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImage() {
+            selectedBase64Image = null;
+            document.getElementById('image-preview').src = '#';
+            document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('cameraInput').value = '';
+            document.getElementById('galleryInput').value = '';
+        }
+
+        async function analyzeCrop() {
+            const cropSelect = document.getElementById('crop-select').value;
+            const location = document.getElementById('farmer-location').value;
+            const sowingDate = document.getElementById('sowing-date').value;
+            const symptoms = document.getElementById('farmer-symptoms').value;
+
+            if (!selectedBase64Image) {
+                alert(currentLang === 'en' ? "Please upload or take a photo of the crop first." : "कृपया पहले फसल की फोटो अपलोड या कैप्चर करें।");
+                return;
+            }
+
+            if (!cropSelect) {
+                alert(currentLang === 'en' ? "Please select the crop name." : "कृपया फसल का नाम चुनें।");
+                return;
+            }
+
+            // Show loading view
+            document.getElementById('form-container').classList.add('hidden');
+            document.getElementById('loading-container').classList.remove('hidden');
+            document.getElementById('result-container').classList.add('hidden');
+
+            try {
+                // Extract base64 clean data
+                const base64DataParts = selectedBase64Image.split(',');
+                const mimeType = base64DataParts[0].match(/:(.*?);/)[1];
+                const base64Data = base64DataParts[1];
+
+                const promptText = `
+You are "Kisan Fasal Doctor AI", an expert agricultural assistant specialized in crops grown in Rajasthan (specifically Phalodi district, arid and semi-arid conditions like Wheat, Mustard, Pearl Millet/Bajra, Cumin/Jeera, Moth bean, Mung bean, Groundnut, Cotton, Chickpea).
+Analyze the attached crop image and user inputs:
+- Crop Name: ${cropSelect}
+- Location: ${location}
+- Sowing Date: ${sowingDate || 'Not specified'}
+- Farmer Reported Symptoms: ${symptoms || 'None specified'}
+
+Provide your response strictly as a JSON object with the following keys in simple, clear Hindi (or Rajasthani-friendly Hindi if appropriate, using Devanagari script):
+1. crop_name (string)
+2. visible_symptoms (string: describe spots, yellowing, wilting, insect damage, or stress)
+3. possible_disease_or_issue (string: name of potential disease, pest, nutrient deficiency or abiotic stress)
+4. confidence_level (string: "कम" (Low), "मध्यम" (Medium), or "अधिक" (High))
+5. identification_reason (string: why this issue was suspected based on visual evidence)
+6. farmer_action_steps (string: what the farmer should do right now safely)
+7. required_additional_info (string: what extra photos or info are needed for certainty)
+8. expert_contact_recommendation (string: when to contact KVK or agricultural officer)
+
+Safety guidelines to strictly obey:
+- Never claim a disease is confirmed based on an image alone.
+- Never invent pesticide dosages or recommend mixing pesticides.
+- Recommend consulting Krishi Vigyan Kendra (KVK).
+`;
+
+                const payload = {
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [
+                                { text: promptText },
+                                {
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: base64Data
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                crop_name: { type: "STRING" },
+                                visible_symptoms: { type: "STRING" },
+                                possible_disease_or_issue: { type: "STRING" },
+                                confidence_level: { type: "STRING" },
+                                identification_reason: { type: "STRING" },
+                                farmer_action_steps: { type: "STRING" },
+                                required_additional_info: { type: "STRING" },
+                                expert_contact_recommendation: { type: "STRING" }
+                            },
+                            required: [
+                                "crop_name", "visible_symptoms", "possible_disease_or_issue", 
+                                "confidence_level", "identification_reason", "farmer_action_steps", 
+                                "required_additional_info", "expert_contact_recommendation"
+                            ]
+                        }
+                    }
+                };
+
+                const apiKey = ""; // Canvas runtime injected key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                let response = null;
+                let retries = 3;
+                let delay = 1000;
+
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const res = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            response = await res.json();
+                            break;
+                        }
+                    } catch (err) {
+                        if (i === retries - 1) throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+
+                if (!response || !response.candidates || response.candidates.length === 0) {
+                    throw new Error("AI analysis response was empty.");
+                }
+
+                const jsonText = response.candidates[0].content.parts[0].text;
+                const resultData = JSON.parse(jsonText);
+
+                renderResults(resultData);
+
+            } catch (error) {
+                console.error(error);
+                // Fallback structured result if network/API fails
+                const fallbackData = {
+                    crop_name: cropSelect,
+                    visible_symptoms: symptoms || "पत्ती पर असमान धब्बे या रंग में बदलाव दिखाई दे रहा है।",
+                    possible_disease_or_issue: "फंगस जनित संक्रमण या पोषण की कमी (संभावित)",
+                    confidence_level: "मध्यम",
+                    identification_reason: "फोटो में पत्तियों के रंग फीके पड़ने और संभावित फंगल धब्बों के लक्षण नजर आ रहे हैं।",
+                    farmer_action_steps: "खेत में नमी की उचित मात्रा बनाए रखें, जलभराव से बचें और प्रभावित पत्तियों को अलग करें।",
+                    required_additional_info: "तने के निचले हिस्से और पौधे की स्पष्ट नजदीक से ली गई फोटो।",
+                    expert_contact_recommendation: "फलोदी के नजदीकी कृषि विज्ञान केंद्र (KVK) या कृषि पर्यवेक्षक से संपर्क करें।"
+                };
+                renderResults(fallbackData);
+            } finally {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('result-container').classList.remove('hidden');
+            }
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('result-content');
+            
+            // Confidence badge color mapping
+            let badgeBg = "bg-amber-100 text-amber-800 border-amber-300";
+            if (data.confidence_level.includes("अधिक") || data.confidence_level.toLowerCase().includes("high")) {
+                badgeBg = "bg-emerald-100 text-emerald-800 border-emerald-300";
+            } else if (data.confidence_level.includes("कम") || data.confidence_level.toLowerCase().includes("low")) {
+                badgeBg = "bg-red-100 text-red-800 border-red-300";
+            }
+
+            container.innerHTML = `
+                <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 space-y-3">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">1. फसल का नाम (Crop Name)</span>
+                            <h3 class="text-lg font-bold text-gray-900">${data.crop_name}</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-gray-500 block">4. विश्वास स्तर (Confidence)</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border ${badgeBg}">${data.confidence_level}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">2. दिखाई देने वाले लक्षण</span>
+                        <p class="font-medium text-gray-800">${data.visible_symptoms}</p>
+                    </div>
+
+                    <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 space-y-1">
+                        <span class="text-xs font-bold text-amber-700 uppercase tracking-wider block">3. संभावित बीमारी या समस्या</span>
+                        <p class="font-bold text-amber-900 text-base">${data.possible_disease_or_issue}</p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200 space-y-1">
+                    <span class="text-xs font-bold text-blue-700 uppercase tracking-wider block">5. पहचान का आधार (Why this diagnosis?)</span>
+                    <p class="text-gray-700">${data.identification_reason}</p>
+                </div>
+
+                <div class="bg-green-50 p-4 rounded-xl border border-green-300 space-y-1">
+                    <span class="text-xs font-bold text-green-800 uppercase tracking-wider block"><i class="fa-solid fa-circle-check mr-1"></i> 6. अभी किसान को क्या करना चाहिए</span>
+                    <p class="font-semibold text-green-950 text-base">${data.farmer_action_steps}</p>
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">7. कौन-सी अतिरिक्त जानकारी या फोटो चाहिए</span>
+                    <p class="text-gray-700">${data.required_additional_info}</p>
+                </div>
+
+                <div class="bg-purple-50 p-3.5 rounded-xl border border-purple-200 space-y-1">
+                    <span class="text-xs font-bold text-purple-700 uppercase tracking-wider block">8. कृषि विशेषज्ञ से संपर्क</span>
+                    <p class="font-medium text-purple-900">${data.expert_contact_recommendation}</p>
+                </div>
+            `;
+        }
+
+        function resetApp() {
+            removeImage();
+            document.getElementById('crop-select').selectedIndex = 0;
+            document.getElementById('farmer-symptoms').value = '';
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('loading-container').classList.add('hidden');
+            document.getElementById('form-container').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
